@@ -1,15 +1,50 @@
 # ili2gpkg-web-service-ws
 
+The ili2gpkg web service is a _spring boot_ application and uses _ili2gpkg_ for the import of an INTERLIS transfer file into a geopackage file.
+
 ## TODO
-- Tests mit anderen Browser (Desktop 2016)
-- Doku
+- Tests with different browsers
+- Documentation
+
+## Features
+
+* imports an interlis transfer file into a geopackage file
+* no ili2gpkg options are exposed 
+
+## License
+
+ili2gpkg web service is licensed under the [MIT License](LICENSE).
+
+## Status
+
+ili2gpkg web service is in development state.
+
+## System Requirements
+
+For the current version of ili2gpkg web service, you will need a JRE (Java Runtime Environment) installed on your system, version 1.8 or later.
+
+## Developing
+
+ili2gpkg web service is build as a Spring Boot Application.
+
+`git clone https://github.com/edigonzales/ili2gpkg-web-service-ws.git` 
+
+Use your favorite IDE (e.g. [Spring Tool Suite](https://spring.io/tools/sts/all)) for coding.
 
 
-attribute(get_feature('liegenschaften_grundstueck','t_id',
-grundstueckpos_von),'nummer')
+### Testing
 
+Since _ili2gpkg_ is heavily tested in its own project, there are only functional tests of the web service implemented.
 
-attribute(get_feature_by_id('natgef_prozessquelle_sturz', 'prozessquelle_sturz'),'bemerkungen')
+`./gradlew clean test` will run all tests by starting the web service and uploading an INTERLIS transfer file.
 
+### Building
 
-attribute(get_feature_by_id('natgef_prozessquelle_sturz', "prozessquelle_sturz"),'bemerkungen')
+`./gradlew clean build` will create an executable JAR. Ilivalidator custom functions will not work. Not sure why but must be something with how the plugin loader works. 
+
+### Release management / versioning
+
+It uses a simple release management and versioning mechanism: Local builds are tagged as `1.0.LOCALBUILD`. Builds on Travis, Jenkins or Github Action will append the build number, e.g. `1.0.48`. Major version will be increased after "major" changes. After every commit to the repository a docker image will be build and pushed to `hub.docker.com`. It will be tagged as `latest` and with the build number (`1.0.48`).
+
+## Running as Docker Image (SO!GIS)
+TODO: Link to Openshift stuff.
