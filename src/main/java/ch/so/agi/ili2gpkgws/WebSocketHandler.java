@@ -75,8 +75,16 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         settings.setFunction(Config.FC_IMPORT);
         settings.setDoImplicitSchemaImport(true);
 
-        String modelName = getModelNameFromTransferFile(copiedFile.toFile().getAbsolutePath());
-        settings.setModels(modelName);
+        String modelName = null;
+        try {
+            modelName = getModelNameFromTransferFile(copiedFile.toFile().getAbsolutePath());
+            settings.setModels(modelName);
+        } catch (IoxException e) {
+			e.printStackTrace();
+			session.sendMessage(new TextMessage("<span style='background-color:#EC7063;'>...import failed:</span> " + e.getMessage()));
+			sessionFileMap.remove(session.getId());
+			return;
+        }
 
         // Hardcodiert für altes Naturgefahrenkarten-Modell, damit
         // nicht eine Koordinatenystemoption im GUI exponiert werden
@@ -89,6 +97,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 
         settings.setStrokeArcs(settings, settings.STROKE_ARCS_ENABLE);
         settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
+        settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI);
         settings.setValidation(false);
         
         if (Ili2db.isItfFilename(copiedFile.toFile().getName())) {
@@ -105,60 +114,13 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 			Ili2db.run(settings, null);
 		} catch (Ili2dbException e) {
 			e.printStackTrace();
-			
-			// TODO: send error message
-			
+			session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
+			// TODO: send (zipped) logfile?
 			sessionFileMap.remove(session.getId());
+			return;
 		}
 
-        
-        // There is no option for config file support in the GUI at the moment.
-//        String configFile = "on";
-
-        // Run the validation.
-//        String allObjectsAccessible = "true";
-//        boolean valid;
-//        try {
-//            session.sendMessage(new TextMessage("Validating..."));
-//            valid = ilivalidator.validate(allObjectsAccessible, configFile, copiedFile.toFile().getAbsolutePath(), logFilename);
-//        } catch (IoxException | IOException e) {
-//            e.printStackTrace();            
-//            log.error(e.getMessage());
-//            
-//            TextMessage errorMessage = new TextMessage("An error occured while validating the data:" + e.getMessage());
-//            session.sendMessage(errorMessage);
-//            
-//            return;
-//        }
-//
-//        String resultText = "<span style='background-color:#58D68D;'>...validation done:</span>";
-//        if (!valid) {
-//            resultText = "<span style='background-color:#EC7063'>...validation failed:</span>";
-//        }
-        
-        log.info(servletContextPath);
-        log.info(session.getUri().getScheme());
-        log.info(session.getUri().getHost());
-        
-        String schema = session.getUri().getScheme().equalsIgnoreCase("wss") ? "https" : "http";
-        String host = session.getUri().getHost();
-        
-//        String port;
-//        if (serverPort.equalsIgnoreCase("80") || serverPort.equalsIgnoreCase("443") || serverPort.equalsIgnoreCase("") || serverPort == null) {
-//            port = "";
-//        } else if (host.contains("so.ch")) { 
-//            // FIXME: Am liebsten wäre es mir, wenn es mit relativen URL gehen würde. Da hatte ich aber Probleme im Browser/Client. Die haben nicht funktioniert in 
-//            // der GDI-Umgebung.
-//            // Variante: Absolute URL im Client zusammenstöpseln. Ob das aber für die Tests funktioniert, muss man schauen...
-//            port = "";
-//        } else {
-//            port = ":"+serverPort;
-//        }
-//        log.info(port);
-//        
-//        String logFileId = copiedFile.getParent().getFileName().toString();
-//        TextMessage resultMessage = new TextMessage(resultText + " <a href='"+schema+"://"+host+port+"/"+servletContextPath+"/"+LOG_ENDPOINT+"/"+logFileId+"/"+filename+".log' target='_blank'>Download log file.</a><br/><br/>   ");
-//      session.sendMessage(resultMessage);
+        session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import done.</span>"));
         
         byte[] fileContent = Files.readAllBytes(new File(gpkgFileName).toPath());
         session.sendMessage(new BinaryMessage(fileContent));

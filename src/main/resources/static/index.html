@@ -73,9 +73,11 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
+	var fileName;
+	
     $(document).ready(function () {
         $(".custom-file-input").on("change", function() {
-            var fileName = $(this).val().split("\\").pop();
+            fileName = $(this).val().split("\\").pop();
             $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
         });            
     });
@@ -111,9 +113,9 @@
             });
         	
             var link = document.createElement('a');
-            link.download = "gaga.gpkg";
+            link.download = fileName.substring(0,fileName.length-4).concat(".gpkg");
             let url = URL.createObjectURL(blob);
-            link.download = "gaga.gpkg";
+            link.download = fileName.substring(0,fileName.length-4).concat(".gpkg");
             link.href = url;
             document.body.appendChild(link); // Needed for Firefox
             link.click();
@@ -157,7 +159,7 @@
     function addMessageToWindow(message) {
         messageWindow.innerHTML += `<div>${message}</div>`
         
-        if (message.includes("...validation")) {
+        if (message.includes("...import")) {
         	document.getElementById("btnSubmit").disabled = false;
         }
     }
