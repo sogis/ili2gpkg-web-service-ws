@@ -109,7 +109,7 @@ public abstract class IntegrationTests {
         clientHandler.sendMessage(file);
         clientHandler.sendMessage(file.getName());
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         
         String returnedMessage = clientHandler.getMessage();
         assertTrue(returnedMessage.contains("...import done"));        
@@ -130,7 +130,7 @@ public abstract class IntegrationTests {
         clientHandler.sendMessage(file);
         clientHandler.sendMessage(file.getName());
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         
         String returnedMessage = clientHandler.getMessage();
         System.out.println(returnedMessage);
