@@ -5,6 +5,7 @@ The ili2gpkg web service is a _spring boot_ application and uses _ili2gpkg_ for 
 ## TODO
 - Tests with different browsers
 - Documentation
+- ...
 
 ## Features
 
@@ -46,5 +47,12 @@ Since _ili2gpkg_ is heavily tested in its own project, there are only functional
 
 It uses a simple release management and versioning mechanism: Local builds are tagged as `1.0.LOCALBUILD`. Builds on Travis, Jenkins or Github Action will append the build number, e.g. `1.0.48`. Major version will be increased after "major" changes. After every commit to the repository a docker image will be build and pushed to `hub.docker.com`. It will be tagged as `latest` and with the build number (`1.0.48`).
 
-## Running as Docker Image (SO!GIS)
+## Running as Docker Image 
+
+### Local
+```
+docker run -p 8080:8080 sogis/ili2gpkg-web-service:latest
+```
+
+### GDI 
 TODO: Link to Openshift stuff.
