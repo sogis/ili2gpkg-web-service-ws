@@ -1,3 +1,5 @@
+![CI/CD](https://github.com/sogis/ili2gpkg-web-service-ws/workflows/CI/CD/badge.svg)
+
 # ili2gpkg-web-service-ws
 
 The ili2gpkg web service is a _spring boot_ application and uses _ili2gpkg_ for the import of an INTERLIS transfer file into a geopackage file.
