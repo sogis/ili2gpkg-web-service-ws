@@ -1,6 +1,6 @@
 FROM adoptopenjdk:8u262-b10-jre-hotspot as builder
 WORKDIR application
-ARG JAR_FILE=build/libs/ili2gpkg-web-service.jar
+ARG JAR_FILE=build/libs/ili2gpkg-web-service*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
