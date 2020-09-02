@@ -5,6 +5,8 @@ plugins {
     id "com.bmuschko.docker-remote-api" version "6.1.2"	
 }
 
+apply from: "gradle/versioning.gradle"
+
 group = 'ch.so.agi'
 sourceCompatibility = '1.8'
 
