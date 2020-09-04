@@ -18,6 +18,8 @@ jobs:
         with:
           java-version: 1.8
       - name: Build with Gradle
+        run: ./gradlew clean build --fail-fast -x test  
+      - name: ls
         #run: ./gradlew clean build pullDockerImage dockerTest --fail-fast -x test
         run: ls -la build/libs/
         env:
