@@ -1,19 +1,19 @@
 FROM adoptopenjdk:8u262-b10-jre-hotspot as builder
-WORKDIR /home/application
+WORKDIR /home/app
 ARG JAR_FILE=build/libs/ili2gpkg-web-service*.jar
-COPY ${JAR_FILE} /home/application.jar
-RUN java -Djarmode=layertools -jar /home/application.jar extract
+COPY ${JAR_FILE} /home/app/application.jar
+RUN java -Djarmode=layertools -jar /home/app/application.jar extract
 
 FROM adoptopenjdk:8u262-b10-jre-hotspot
 EXPOSE 8080
-WORKDIR /home/application
-COPY --from=builder /home/application/dependencies/ ./
-COPY --from=builder /home/application/spring-boot-loader/ ./
-COPY --from=builder /home/application/snapshot-dependencies/ ./
-#COPY --from=builder /home/application/application/ ./
+WORKDIR /home/app
+COPY --from=builder /home/app/dependencies/ ./
+COPY --from=builder /home/app/spring-boot-loader/ ./
+COPY --from=builder /home/app/snapshot-dependencies/ ./
+COPY --from=builder /home/app/application/ ./
 
-RUN chown -R 1001:0 /home/application && \
-    chmod -R g=u /home/application
+RUN chown -R 1001:0 /home/app && \
+    chmod -R g=u /home/app
 
 USER 1001
 
