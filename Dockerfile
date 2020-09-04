@@ -10,6 +10,7 @@ WORKDIR /home/app
 COPY --from=builder /home/app/dependencies/ ./
 COPY --from=builder /home/app/spring-boot-loader/ ./
 COPY --from=builder /home/app/snapshot-dependencies/ ./
+RUN true
 COPY --from=builder /home/app/application/ ./
 
 RUN chown -R 1001:0 /home/app && \
