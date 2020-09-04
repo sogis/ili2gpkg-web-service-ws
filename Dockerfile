@@ -10,7 +10,7 @@ WORKDIR /home/application
 COPY --from=builder /home/application/dependencies/ ./
 COPY --from=builder /home/application/spring-boot-loader/ ./
 COPY --from=builder /home/application/snapshot-dependencies/ ./
-COPY --from=builder /home/application/application ./
+COPY --from=builder /home/application/application/ ./
 
 RUN chown -R 1001:0 /home/application && \
     chmod -R g=u /home/application
