@@ -1,15 +1,21 @@
 FROM adoptopenjdk:8u262-b10-jre-hotspot as builder
-WORKDIR application
+WORKDIR /home/application
 ARG JAR_FILE=build/libs/ili2gpkg-web-service*.jar
-COPY ${JAR_FILE} application.jar
-RUN java -Djarmode=layertools -jar application.jar extract
+COPY ${JAR_FILE} /home/application.jar
+RUN java -Djarmode=layertools -jar /home/application.jar extract
 
 FROM adoptopenjdk:8u262-b10-jre-hotspot
+EXPOSE 8080
 WORKDIR application
 COPY --from=builder application/dependencies/ ./
 COPY --from=builder application/spring-boot-loader/ ./
 COPY --from=builder application/snapshot-dependencies/ ./
 COPY --from=builder application/application ./
+
+RUN chown -R 1001:0 /home/application && \
+    chmod -R g=u /home/application
+
+USER 1001
 
 ENTRYPOINT ["java" ,"-XX:MaxRAMPercentage=80.0", "-noverify", "-XX:TieredStopAtLevel=1", "org.springframework.boot.loader.JarLauncher"]
 

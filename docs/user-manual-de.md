@@ -32,6 +32,6 @@ Konnte die Transformation nicht durchgeführt werden, ist die Meldung "...import
 
 ![ili2gpkg Transformation failed](./images/ili2gpkg06.png)
 
-Unter gewissen Umständen kann es zu Unterbrüchen zwischen Browser und Server kommen. In diesem Fall erscheint bei einer Aktion (z.B. "Submit"-Knopf drücken) die Meldung "Connection closed. Refresh Browser". In diesem Fall muss die Seite neu geladen werden und es sollte wieder die Melung "Connected" erscheinen.
+Unter gewissen Umständen kann es zu Unterbrüchen zwischen Browser und Server kommen. In diesem Fall erscheint bei einer Aktion (z.B. "Submit"-Knopf drücken) die Meldung "Connection closed. Refresh Browser". In diesem Fall muss die Seite neu geladen werden und es sollte wieder die Meldung "Connected" erscheinen.
 
 ![ili2gpkg connection closed](./images/ili2gpkg07.png)
