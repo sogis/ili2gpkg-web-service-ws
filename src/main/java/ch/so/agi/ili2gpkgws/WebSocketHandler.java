@@ -3,6 +3,8 @@ package ch.so.agi.ili2gpkgws;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.socket.BinaryMessage;
@@ -25,11 +27,16 @@ import ch.interlis.iox_j.StartBasketEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -46,6 +53,9 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 
     @Value("#{servletContext.contextPath}")
     protected String servletContextPath;
+    
+    @Autowired
+    private ResourceLoader resourceLoader;
     
 //    @Value("${server.port}")
 //    protected String serverPort;
@@ -115,11 +125,36 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 		} catch (Ili2dbException e) {
 			e.printStackTrace();
 			session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
-			// TODO: send (zipped) logfile?
 			sessionFileMap.remove(session.getId());
 			return;
 		}
 
+        // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
+        Resource resource = resourceLoader.getResource("classpath:wmtsortho.qgz");
+        InputStream inputStream = resource.getInputStream();
+        File qgzFile = new File(copiedFile.toFile().getParent(), resource.getFilename());
+        log.info(qgzFile.getAbsolutePath());
+        Files.copy(inputStream, qgzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        inputStream.close();
+
+        String url = "jdbc:sqlite:" + settings.getDbfile();
+        try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
+        	stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
+        	
+        	// name = datenkontrolle
+        	// metadata = {"last_modified_time": "2020-09-03T08:13:20", "last_modified_user": "stefan" }
+        	// content = 
+        	
+        	
+        } catch (SQLException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        
+        
+        
+        
+        
+        
         session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import done.</span>"));
         
         byte[] fileContent = Files.readAllBytes(new File(gpkgFileName).toPath());
