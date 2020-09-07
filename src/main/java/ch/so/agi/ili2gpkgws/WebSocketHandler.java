@@ -6,6 +6,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
@@ -37,6 +38,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -98,15 +102,20 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 
         // Hardcodiert für altes Naturgefahrenkarten-Modell, damit
         // nicht eine Koordinatenystemoption im GUI exponiert werden
-        // muss. Mit LV03 wollen wir nichts mehr am Hut haben.            
+        // muss. Mit LV03 wollen wir nichts mehr am Hut haben.    
+        String gpkgFileName;
         if (modelName.equalsIgnoreCase("Naturgefahrenkarte_SO_V11")) {
             settings.setDefaultSrsCode("21781");
+            gpkgFileName = Paths.get(copiedFile.toFile().getParent(), "datenkontrolle.gpkg").toFile().getAbsolutePath();
+
         } else {
             settings.setDefaultSrsCode("2056");
+            settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
+            gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
         }
 
+        settings.setDbfile(gpkgFileName);
         settings.setStrokeArcs(settings, settings.STROKE_ARCS_ENABLE);
-        settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
         settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI);
         settings.setValidation(false);
         
@@ -114,9 +123,6 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             settings.setItfTransferfile(true);
         }
         
-        String gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
-        settings.setDbfile(gpkgFileName);
-
         settings.setDburl("jdbc:sqlite:" + settings.getDbfile());
         settings.setXtffile(copiedFile.toFile().getAbsolutePath());
 
@@ -132,29 +138,26 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
         Resource resource = resourceLoader.getResource("classpath:wmtsortho.qgz");
         InputStream inputStream = resource.getInputStream();
-        File qgzFile = new File(copiedFile.toFile().getParent(), resource.getFilename());
-        log.info(qgzFile.getAbsolutePath());
-        Files.copy(inputStream, qgzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        byte[] content = FileCopyUtils.copyToByteArray(inputStream);
         inputStream.close();
 
         String url = "jdbc:sqlite:" + settings.getDbfile();
         try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
         	stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
         	
-        	// name = datenkontrolle
-        	// metadata = {"last_modified_time": "2020-09-03T08:13:20", "last_modified_user": "stefan" }
-        	// content = 
+        	String name = "datenkontrolle";
+        	DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        	String formattedDate = formatter.format(LocalDateTime.now());
+        	String metadata = "{\"last_modified_time\": \""+formattedDate+"\", \"last_modified_user\": \"ili2gpkg\" }";
         	
-        	
+        	String sql = "INSERT INTO qgis_projects (name,metadata,content) VALUES ('"+name+"', '"+ metadata +"', '"+ byteArrayToHex(content) +"')";
+        	stmt.execute(sql);
         } catch (SQLException e) {
-            throw new IllegalArgumentException(e.getMessage());
+			session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
+			sessionFileMap.remove(session.getId());
+			return;            
         }
-        
-        
-        
-        
-        
-        
+       
         session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import done.</span>"));
         
         byte[] fileContent = Files.readAllBytes(new File(gpkgFileName).toPath());
@@ -247,4 +250,11 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
+    
+	public static String byteArrayToHex(byte[] a) {
+		StringBuilder sb = new StringBuilder(a.length * 2);
+		for (byte b : a)
+			sb.append(String.format("%02x", b));
+		return sb.toString();
+	}
 }
