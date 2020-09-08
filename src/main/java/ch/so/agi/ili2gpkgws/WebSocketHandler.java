@@ -138,6 +138,12 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
         Resource resource = resourceLoader.getResource("classpath:wmtsortho.qgz");
         InputStream inputStream = resource.getInputStream();
+        
+        File qgzFile = new File(copiedFile.toFile().getParent(), resource.getFilename());
+        log.info(qgzFile.getAbsolutePath());
+        Files.copy(inputStream, qgzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        
         byte[] content = FileCopyUtils.copyToByteArray(inputStream);
         inputStream.close();
 
