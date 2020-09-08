@@ -26,10 +26,13 @@ import ch.interlis.iox_j.EndTransferEvent;
 import ch.interlis.iox_j.StartBasketEvent;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,6 +46,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,8 +79,10 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         File file = sessionFileMap.get(session.getId());
         
         String filename = message.getPayload();
-        
-        Path copiedFile = Paths.get(file.getParent(), filename);
+        String tempDir = file.getParent();
+        log.info(tempDir);
+
+        Path copiedFile = Paths.get(tempDir, filename);
         Files.copy(file.toPath(), copiedFile, StandardCopyOption.REPLACE_EXISTING);
         log.info(copiedFile.toFile().getAbsolutePath());
 
@@ -103,17 +110,20 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         // Hardcodiert für altes Naturgefahrenkarten-Modell, damit
         // nicht eine Koordinatenystemoption im GUI exponiert werden
         // muss. Mit LV03 wollen wir nichts mehr am Hut haben.    
-        String gpkgFileName;
         if (modelName.equalsIgnoreCase("Naturgefahrenkarte_SO_V11")) {
             settings.setDefaultSrsCode("21781");
-            gpkgFileName = Paths.get(copiedFile.toFile().getParent(), "datenkontrolle.gpkg").toFile().getAbsolutePath();
-
+//            settings.setValue(Config.CREATE_ENUMCOL_AS_ITFCODE,Config.CREATE_ENUMCOL_AS_ITFCODE_YES);            
+//            settings.setCreateEnumCols(Config.CREATE_ENUM_TXT_COL);
+            
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI_WITH_ID);
+            settings.setTidHandling(Config.TID_HANDLING_PROPERTY);
+            settings.setImportTid(true);
         } else {
             settings.setDefaultSrsCode("2056");
             settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
-            gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
         }
 
+        String gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
         settings.setDbfile(gpkgFileName);
         settings.setStrokeArcs(settings, settings.STROKE_ARCS_ENABLE);
         settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI);
@@ -136,16 +146,38 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 		}
 
         // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
-        Resource resource = resourceLoader.getResource("classpath:wmtsortho.qgz");
+        Resource resource = resourceLoader.getResource("classpath:datenkontrolle.qgs");
         InputStream inputStream = resource.getInputStream();
         
-        File qgzFile = new File(copiedFile.toFile().getParent(), resource.getFilename());
-        log.info(qgzFile.getAbsolutePath());
-        Files.copy(inputStream, qgzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-        
-        byte[] content = FileCopyUtils.copyToByteArray(inputStream);
+        File qgsFile = new File(Paths.get(tempDir, "datenkontrolle.qgs").toFile().getAbsolutePath());
+        log.info(qgsFile.getAbsolutePath());
+        Files.copy(inputStream, qgsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         inputStream.close();
+
+        // Man muss zusätzlich den Namen der GPKG-Datei in der QGIS-Projektdatei ersetzen. Die erstellte GPKG-Datei
+        // heisst nicht immer gleich.
+        String oldFileContent = new String(Files.readAllBytes(qgsFile.toPath()), StandardCharsets.UTF_8);
+        String newFileContent = oldFileContent.replaceAll("./datenkontrolle.gpkg", "./" + new File(gpkgFileName).getName());
+        FileWriter writer = new FileWriter(qgsFile);
+        writer.write(newFileContent);
+        writer.close();
+        
+        // QGS -> QGZ
+		FileOutputStream fos = new FileOutputStream(Paths.get(tempDir, "datenkontrolle.qgz").toFile().getAbsolutePath());
+		ZipOutputStream zipOut = new ZipOutputStream(fos);
+		FileInputStream fis = new FileInputStream(qgsFile);
+		ZipEntry zipEntry = new ZipEntry(qgsFile.getName());
+		zipOut.putNextEntry(zipEntry);
+		byte[] bytes = new byte[1024];
+		int length;
+		while ((length = fis.read(bytes)) >= 0) {
+			zipOut.write(bytes, 0, length);
+		}
+		zipOut.close();
+		fis.close();
+		fos.close();
+        
+        byte[] content = Files.readAllBytes(Paths.get(tempDir, "datenkontrolle.qgz"));
 
         String url = "jdbc:sqlite:" + settings.getDbfile();
         try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
