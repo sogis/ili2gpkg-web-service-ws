@@ -115,8 +115,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             settings.setTidHandling(Config.TID_HANDLING_PROPERTY);
             settings.setImportTid(true);
             settings.setCreateFk(Config.CREATE_FK_YES);
-            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI_WITH_ID);
-            //settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
             settings.setCreateMetaInfo(true);
 
         } else {
@@ -158,7 +157,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         // Man muss zusätzlich den Namen der GPKG-Datei in der QGIS-Projektdatei ersetzen. Die erstellte GPKG-Datei
         // heisst nicht immer gleich.
         String oldFileContent = new String(Files.readAllBytes(qgsFile.toPath()), StandardCharsets.UTF_8);
-        String newFileContent = oldFileContent.replaceAll("./datenkontrolle.gpkg", "./" + new File(gpkgFileName).getName());
+        String newFileContent = oldFileContent.replaceAll("./GKSO11.gpkg", "./" + new File(gpkgFileName).getName());
         FileWriter writer = new FileWriter(qgsFile);
         writer.write(newFileContent);
         writer.close();
