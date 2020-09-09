@@ -112,21 +112,22 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         // muss. Mit LV03 wollen wir nichts mehr am Hut haben.    
         if (modelName.equalsIgnoreCase("Naturgefahrenkarte_SO_V11")) {
             settings.setDefaultSrsCode("21781");
-//            settings.setValue(Config.CREATE_ENUMCOL_AS_ITFCODE,Config.CREATE_ENUMCOL_AS_ITFCODE_YES);            
-//            settings.setCreateEnumCols(Config.CREATE_ENUM_TXT_COL);
-            
-            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI_WITH_ID);
             settings.setTidHandling(Config.TID_HANDLING_PROPERTY);
             settings.setImportTid(true);
+            settings.setCreateFk(Config.CREATE_FK_YES);
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI_WITH_ID);
+            //settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
+            settings.setCreateMetaInfo(true);
+
         } else {
             settings.setDefaultSrsCode("2056");
             settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
         }
 
         String gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
         settings.setDbfile(gpkgFileName);
         settings.setStrokeArcs(settings, settings.STROKE_ARCS_ENABLE);
-        settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI);
         settings.setValidation(false);
         
         if (Ili2db.isItfFilename(copiedFile.toFile().getName())) {
