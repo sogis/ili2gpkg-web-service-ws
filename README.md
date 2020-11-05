@@ -55,5 +55,3 @@ It uses a simple release management and versioning mechanism: Local builds are t
 docker run -p 8080:8080 sogis/ili2gpkg-web-service:latest
 ```
 
-### GDI 
-TODO: Link to Openshift stuff.
