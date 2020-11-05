@@ -6,7 +6,6 @@ The ili2gpkg web service is a _spring boot_ application and uses _ili2gpkg_ for 
 
 ## TODO
 - Tests with different browsers
-- Documentation
 - ...
 
 ## Features
