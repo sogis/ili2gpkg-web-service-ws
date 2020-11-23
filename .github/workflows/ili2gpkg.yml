@@ -30,6 +30,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
           docker images
           ./gradlew pushDockerImages
+        if: ${{ github.ref == 'refs/heads/master' }}  
         env:
           DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
           DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
