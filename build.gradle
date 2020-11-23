@@ -95,7 +95,7 @@ task pullDockerImage(type: DockerPullImage) {
     image = "sogis/ili2gpkg-web-service:latest"
 }
 
-task buildDockerImage(type: DockerBuildImage) {
+task buildDockerImage(dependsOn: 'pullDockerImage', type: DockerBuildImage) {
     description = "Build docker image."
     inputDir = project.rootDir
     cacheFrom.add("sogis/ili2gpkg-web-service:latest")    
