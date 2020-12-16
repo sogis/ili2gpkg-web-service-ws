@@ -33,6 +33,8 @@ ili2gpkg web service is build as a Spring Boot Application.
 
 Use your favorite IDE (e.g. [Spring Tool Suite](https://spring.io/tools/sts/all)) for coding.
 
+### Update QGIS project (for Gefahrenkartierung)
+If AFU wants to change the QGIS project file and sends a new one: Rename it to `*.zip`, then unzip it and search and replace `<datasource>./so_wie_es_daher_kommt.gpkg` with `<datasource>./GKSO11.gpkg` and `source="./so_wie_es_daher_kommt.gpkg` with `source="./GKSO11.gpkg`. 
 
 ### Testing
 
