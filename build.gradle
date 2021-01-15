@@ -50,7 +50,7 @@ dependencies {
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
     failFast = true
     testLogging {
         showStandardStreams = true
