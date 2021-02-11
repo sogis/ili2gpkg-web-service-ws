@@ -57,21 +57,10 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static String FOLDER_PREFIX = "ili2gpkg_";
-
-    private static String LOG_ENDPOINT = "log";
-
-    @Value("#{servletContext.contextPath}")
-    protected String servletContextPath;
     
     @Autowired
     private ResourceLoader resourceLoader;
     
-//    @Value("${server.port}")
-//    protected String serverPort;
-
-//    @Autowired
-//    IlivalidatorService ilivalidator;
-
     HashMap<String, File> sessionFileMap = new HashMap<String, File>();
     
     @Override
@@ -101,10 +90,10 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             modelName = getModelNameFromTransferFile(copiedFile.toFile().getAbsolutePath());
             settings.setModels(modelName);
         } catch (IoxException e) {
-			e.printStackTrace();
-			session.sendMessage(new TextMessage("<span style='background-color:#EC7063;'>...import failed:</span> " + e.getMessage()));
-			sessionFileMap.remove(session.getId());
-			return;
+            e.printStackTrace();
+            session.sendMessage(new TextMessage("<span style='background-color:#EC7063;'>...import failed:</span> " + e.getMessage()));
+            sessionFileMap.remove(session.getId());
+            return;
         }
 
         // Hardcodiert für altes Naturgefahrenkarten-Modell, damit
@@ -137,13 +126,13 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         settings.setXtffile(copiedFile.toFile().getAbsolutePath());
 
         try {
-			Ili2db.run(settings, null);
-		} catch (Ili2dbException e) {
-			e.printStackTrace();
-			session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
-			sessionFileMap.remove(session.getId());
-			return;
-		}
+            Ili2db.run(settings, null);
+        } catch (Ili2dbException e) {
+            e.printStackTrace();
+            session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
+            sessionFileMap.remove(session.getId());
+            return;
+        }
 
         // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
         Resource resource = resourceLoader.getResource("classpath:datenkontrolle.qgs");
@@ -163,37 +152,37 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         writer.close();
         
         // QGS -> QGZ
-		FileOutputStream fos = new FileOutputStream(Paths.get(tempDir, "datenkontrolle.qgz").toFile().getAbsolutePath());
-		ZipOutputStream zipOut = new ZipOutputStream(fos);
-		FileInputStream fis = new FileInputStream(qgsFile);
-		ZipEntry zipEntry = new ZipEntry(qgsFile.getName());
-		zipOut.putNextEntry(zipEntry);
-		byte[] bytes = new byte[1024];
-		int length;
-		while ((length = fis.read(bytes)) >= 0) {
-			zipOut.write(bytes, 0, length);
-		}
-		zipOut.close();
-		fis.close();
-		fos.close();
+        FileOutputStream fos = new FileOutputStream(Paths.get(tempDir, "datenkontrolle.qgz").toFile().getAbsolutePath());
+        ZipOutputStream zipOut = new ZipOutputStream(fos);
+        FileInputStream fis = new FileInputStream(qgsFile);
+        ZipEntry zipEntry = new ZipEntry(qgsFile.getName());
+        zipOut.putNextEntry(zipEntry);
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+        zipOut.close();
+        fis.close();
+        fos.close();
         
         byte[] content = Files.readAllBytes(Paths.get(tempDir, "datenkontrolle.qgz"));
 
         String url = "jdbc:sqlite:" + settings.getDbfile();
         try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
-        	stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
-        	
-        	String name = "datenkontrolle";
-        	DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-        	String formattedDate = formatter.format(LocalDateTime.now());
-        	String metadata = "{\"last_modified_time\": \""+formattedDate+"\", \"last_modified_user\": \"ili2gpkg\" }";
-        	
-        	String sql = "INSERT INTO qgis_projects (name,metadata,content) VALUES ('"+name+"', '"+ metadata +"', '"+ byteArrayToHex(content) +"')";
-        	stmt.execute(sql);
+            stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
+            
+            String name = "datenkontrolle";
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+            String formattedDate = formatter.format(LocalDateTime.now());
+            String metadata = "{\"last_modified_time\": \""+formattedDate+"\", \"last_modified_user\": \"ili2gpkg\" }";
+            
+            String sql = "INSERT INTO qgis_projects (name,metadata,content) VALUES ('"+name+"', '"+ metadata +"', '"+ byteArrayToHex(content) +"')";
+            stmt.execute(sql);
         } catch (SQLException e) {
-			session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
-			sessionFileMap.remove(session.getId());
-			return;            
+            session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
+            sessionFileMap.remove(session.getId());
+            return;            
         }
        
         session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import done.</span>"));
@@ -289,10 +278,10 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
     
-	public static String byteArrayToHex(byte[] a) {
-		StringBuilder sb = new StringBuilder(a.length * 2);
-		for (byte b : a)
-			sb.append(String.format("%02x", b));
-		return sb.toString();
-	}
+    public static String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder(a.length * 2);
+        for (byte b : a)
+            sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
 }
