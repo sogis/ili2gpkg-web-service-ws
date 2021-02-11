@@ -40,13 +40,15 @@ dependencies {
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
-    testImplementation 'org.jsoup:jsoup:1.12.1'	
+    //testImplementation 'org.jsoup:jsoup:1.12.1'	
 	
     implementation 'org.xerial:sqlite-jdbc:3.27.2'
     implementation 'ch.interlis:ili2gpkg:4.4.1'
     implementation 'ch.interlis:ili2c-core:5.0.6'
     implementation 'ch.interlis:ili2c-tool:5.0.6'
     implementation 'ch.interlis:iox-ili:1.20.17'	
+    
+    implementation 'commons-io:commons-io:2.8.0'  
 }
 
 test {

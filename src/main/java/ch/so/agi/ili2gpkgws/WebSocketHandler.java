@@ -49,6 +49,7 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,6 +192,8 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         session.sendMessage(new BinaryMessage(fileContent));
         
         sessionFileMap.remove(session.getId());
+        
+        FileUtils.deleteDirectory(new File(file.getParent()));
     }
     
     @Override
@@ -199,7 +202,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         
         // Der Dateinamen ist nicht in der binary message greifbar. Aus diesem Grund
         // wird zuerst die binary message als 'data.file' gespeichert und anschliessend
-        // wieder in umbenannt. Der Originalnamen wird als text message geschickt.
+        // wieder umbenannt. Der Originalnamen wird als text message geschickt.
         Path uploadFilePath = Paths.get(tmpDirectory.toString(), "data.file"); 
                 
         FileChannel fc = new FileOutputStream(uploadFilePath.toFile().getAbsoluteFile(), false).getChannel();
