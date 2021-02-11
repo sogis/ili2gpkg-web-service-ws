@@ -108,6 +108,19 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
             settings.setCreateMetaInfo(true);
 
+        } else if (modelName.equalsIgnoreCase("VSADSSMINI_2020_LV95")) {
+            settings.setModeldir("https://vsa.ch/models;%ITF_DIR");
+            
+            settings.setDefaultSrsCode("2056");
+            settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
+            settings.setCreateEnumDefs(Config.CREATE_ENUM_DEFS_MULTI); 
+            settings.setTidHandling(Config.TID_HANDLING_PROPERTY);
+            settings.setImportTid(true);
+            settings.setImportBid(true);
+            
+            settings.setSqlNull(Config.SQL_NULL_ENABLE);
+            settings.setSkipGeometryErrors(true);
+            settings.setSkipReferenceErrors(true);            
         } else {
             settings.setDefaultSrsCode("2056");
             settings.setNameOptimization(settings.NAME_OPTIMIZATION_TOPIC);
@@ -116,7 +129,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
 
         String gpkgFileName = copiedFile.toFile().getAbsolutePath().substring(0, copiedFile.toFile().getAbsolutePath().length()-4) + ".gpkg";
         settings.setDbfile(gpkgFileName);
-        settings.setStrokeArcs(settings, settings.STROKE_ARCS_ENABLE);
+        Config.setStrokeArcs(settings, Config.STROKE_ARCS_ENABLE);
         settings.setValidation(false);
         
         if (Ili2db.isItfFilename(copiedFile.toFile().getName())) {
@@ -125,7 +138,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         
         settings.setDburl("jdbc:sqlite:" + settings.getDbfile());
         settings.setXtffile(copiedFile.toFile().getAbsolutePath());
-
+        
         try {
             Ili2db.run(settings, null);
         } catch (Ili2dbException e) {
@@ -135,55 +148,57 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             return;
         }
 
-        // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
-        Resource resource = resourceLoader.getResource("classpath:datenkontrolle.qgs");
-        InputStream inputStream = resource.getInputStream();
-        
-        File qgsFile = new File(Paths.get(tempDir, "datenkontrolle.qgs").toFile().getAbsolutePath());
-        log.info(qgsFile.getAbsolutePath());
-        Files.copy(inputStream, qgsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        inputStream.close();
-
-        // Man muss zusätzlich den Namen der GPKG-Datei in der QGIS-Projektdatei ersetzen. Die erstellte GPKG-Datei
-        // heisst nicht immer gleich.
-        String oldFileContent = new String(Files.readAllBytes(qgsFile.toPath()), StandardCharsets.UTF_8);
-        String newFileContent = oldFileContent.replaceAll("./GKSO11.gpkg", "./" + new File(gpkgFileName).getName());
-        FileWriter writer = new FileWriter(qgsFile);
-        writer.write(newFileContent);
-        writer.close();
-        
-        // QGS -> QGZ
-        FileOutputStream fos = new FileOutputStream(Paths.get(tempDir, "datenkontrolle.qgz").toFile().getAbsolutePath());
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-        FileInputStream fis = new FileInputStream(qgsFile);
-        ZipEntry zipEntry = new ZipEntry(qgsFile.getName());
-        zipOut.putNextEntry(zipEntry);
-        byte[] bytes = new byte[1024];
-        int length;
-        while ((length = fis.read(bytes)) >= 0) {
-            zipOut.write(bytes, 0, length);
-        }
-        zipOut.close();
-        fis.close();
-        fos.close();
-        
-        byte[] content = Files.readAllBytes(Paths.get(tempDir, "datenkontrolle.qgz"));
-
-        String url = "jdbc:sqlite:" + settings.getDbfile();
-        try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
+        if (modelName.equalsIgnoreCase("Naturgefahrenkarte_SO_V11")) {
+            // Kopieren des vordefinierten QGIS-Projekt in die GeoPackage-Datei.
+            Resource resource = resourceLoader.getResource("classpath:datenkontrolle.qgs");
+            InputStream inputStream = resource.getInputStream();
             
-            String name = "datenkontrolle";
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-            String formattedDate = formatter.format(LocalDateTime.now());
-            String metadata = "{\"last_modified_time\": \""+formattedDate+"\", \"last_modified_user\": \"ili2gpkg\" }";
+            File qgsFile = new File(Paths.get(tempDir, "datenkontrolle.qgs").toFile().getAbsolutePath());
+            log.info(qgsFile.getAbsolutePath());
+            Files.copy(inputStream, qgsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            inputStream.close();
+
+            // Man muss zusätzlich den Namen der GPKG-Datei in der QGIS-Projektdatei ersetzen. Die erstellte GPKG-Datei
+            // heisst nicht immer gleich.
+            String oldFileContent = new String(Files.readAllBytes(qgsFile.toPath()), StandardCharsets.UTF_8);
+            String newFileContent = oldFileContent.replaceAll("./GKSO11.gpkg", "./" + new File(gpkgFileName).getName());
+            FileWriter writer = new FileWriter(qgsFile);
+            writer.write(newFileContent);
+            writer.close();
             
-            String sql = "INSERT INTO qgis_projects (name,metadata,content) VALUES ('"+name+"', '"+ metadata +"', '"+ byteArrayToHex(content) +"')";
-            stmt.execute(sql);
-        } catch (SQLException e) {
-            session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
-            sessionFileMap.remove(session.getId());
-            return;            
+            // QGS -> QGZ
+            FileOutputStream fos = new FileOutputStream(Paths.get(tempDir, "datenkontrolle.qgz").toFile().getAbsolutePath());
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+            FileInputStream fis = new FileInputStream(qgsFile);
+            ZipEntry zipEntry = new ZipEntry(qgsFile.getName());
+            zipOut.putNextEntry(zipEntry);
+            byte[] bytes = new byte[1024];
+            int length;
+            while ((length = fis.read(bytes)) >= 0) {
+                zipOut.write(bytes, 0, length);
+            }
+            zipOut.close();
+            fis.close();
+            fos.close();
+            
+            byte[] content = Files.readAllBytes(Paths.get(tempDir, "datenkontrolle.qgz"));
+
+            String url = "jdbc:sqlite:" + settings.getDbfile();
+            try (Connection conn = DriverManager.getConnection(url); Statement stmt = conn.createStatement()) {
+                stmt.execute("CREATE TABLE qgis_projects(name TEXT PRIMARY KEY, metadata BLOB, content BLOB)");
+                
+                String name = "datenkontrolle";
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+                String formattedDate = formatter.format(LocalDateTime.now());
+                String metadata = "{\"last_modified_time\": \""+formattedDate+"\", \"last_modified_user\": \"ili2gpkg\" }";
+                
+                String sql = "INSERT INTO qgis_projects (name,metadata,content) VALUES ('"+name+"', '"+ metadata +"', '"+ byteArrayToHex(content) +"')";
+                stmt.execute(sql);
+            } catch (SQLException e) {
+                session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import failed.</span>"));
+                sessionFileMap.remove(session.getId());
+                return;            
+            }
         }
        
         session.sendMessage(new TextMessage("<span style='background-color:#58D68D;'>...import done.</span>"));
