@@ -14,10 +14,10 @@ COPY --from=builder /home/app/snapshot-dependencies/ ./
 RUN true 
 COPY --from=builder /home/app/application/ ./
 
-RUN chown -R 1001:0 /home/app && \
+RUN chown -R 0 /home/app && \
     chmod -R g=u /home/app
 
-USER 1001
+ENV ILI_CACHE=/home/app
 
 ENTRYPOINT ["java" ,"-XX:MaxRAMPercentage=80.0", "-noverify", "-XX:TieredStopAtLevel=1", "org.springframework.boot.loader.JarLauncher"]
 
