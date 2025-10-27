@@ -1,10 +1,10 @@
-FROM adoptopenjdk:8u262-b10-jre-hotspot as builder
+FROM adoptopenjdk:8u462-b08-jre as builder
 WORKDIR /home/app
 ARG JAR_FILE=build/libs/ili2gpkg-web-service*.jar
 COPY ${JAR_FILE} /home/app/application.jar
 RUN java -Djarmode=layertools -jar /home/app/application.jar extract
 
-FROM adoptopenjdk:8u262-b10-jre-hotspot
+FROM adoptopenjdk:8u462-b08-jre
 EXPOSE 8080
 WORKDIR /home/app
 COPY --from=builder /home/app/dependencies/ ./
