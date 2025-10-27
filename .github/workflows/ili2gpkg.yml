@@ -9,28 +9,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+
       - uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
-          java-version: 1.8
+          java-version: 8
+          distribution: 'temurin'
+          cache: 'gradle'
+
+
       - name: Build with Gradle
         run: ./gradlew clean build dockerTest -i
+
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: reports
           path: build/reports/tests/
+
       - name: ls
         #run: ./gradlew clean build pullDockerImage dockerTest --fail-fast -x test
         run: ls -la build/libs/
         env:
           BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
+
       - name: Push docker image
         run: |
           export CI_JOB_TIMESTAMP=$(date +%Y%m%dT%H%M%S)
