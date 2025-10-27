@@ -21,6 +21,11 @@ jobs:
           java-version: 1.8
       - name: Build with Gradle
         run: ./gradlew clean build dockerTest -i
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: reports
+          path: build/reports/tests/
       - name: ls
         #run: ./gradlew clean build pullDockerImage dockerTest --fail-fast -x test
         run: ls -la build/libs/
