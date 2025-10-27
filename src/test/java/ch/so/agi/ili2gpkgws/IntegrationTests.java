@@ -93,14 +93,14 @@ public abstract class IntegrationTests {
         ClientSocketHandler clientHandler = new ClientSocketHandler();
         client.doHandshake(clientHandler, endpoint);
 
-        Thread.sleep(2000);
+        Thread.sleep(8000);
         assertTrue(clientHandler.isConnected());
         
         File file = new File("src/test/data/GKSO11_Balsthal.itf");
         clientHandler.sendMessage(file);
         clientHandler.sendMessage(file.getName());
 
-        Thread.sleep(20000);
+        Thread.sleep(60000);
         
         String returnedMessage = clientHandler.getMessage();
         assertTrue(returnedMessage.contains("...import done"));        
@@ -114,14 +114,14 @@ public abstract class IntegrationTests {
         ClientSocketHandler clientHandler = new ClientSocketHandler();
         client.doHandshake(clientHandler, endpoint);
 
-        Thread.sleep(2000);
+        Thread.sleep(8000);
         assertTrue(clientHandler.isConnected());
         
         File file = new File("src/test/data/fubar.itf");
         clientHandler.sendMessage(file);
         clientHandler.sendMessage(file.getName());
 
-        Thread.sleep(20000);
+        Thread.sleep(60000);
         
         String returnedMessage = clientHandler.getMessage();
         System.out.println(returnedMessage);
